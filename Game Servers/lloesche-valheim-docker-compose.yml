@@ -1,0 +1,44 @@
+version: "3"
+name: valheim
+
+volumes:
+  saves:
+  server:
+  backups:
+services: 
+  valheim: 
+    image: ghcr.io/lloesche/valheim-server:latest
+    container_name: valheim
+    cap_add:
+      - sys_nice
+    volumes: 
+      - saves:/config
+      - server:/opt/valheim
+      - backups:/config/backups
+    network_mode: host
+    ports: 
+      - 0.0.0.0:2456-2458:2456-2458/udp
+      - 9001:9001/tcp
+    environment:
+      STEAMCMD_ARGS: -beta public-test -betapassword yesimadebackups validate
+      SERVER_NAME: "Dice Ninja Gaming"
+      WORLD_NAME: "Dice_Ninja_Gaming"
+      SERVER_PASS: "SECRET"
+      SERVER_PORT: 2456
+      TZ: "America/New_York"
+      BACKUPS_CRON: "0 0,6,12,18 * * *"
+      SERVER_PUBLIC: 1
+      ADMINLIST_IDS: 76561198039167197 76561198080945428 76561198095643081
+
+      # WebHooks
+      DISCORD_WEBHOOK: "https://discord.com/api/webhooks/SECRET/SECRET"
+      PRE_BOOTSTRAP_HOOK: 'curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"$$(eval echo Starting Valheim server $$SERVER_NAME)\"}" "$$DISCORD_WEBHOOK"'
+      POST_SERVER_LISTENING_HOOK: 'curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"$$(eval echo The Valheim server $$SERVER_NAME is ready to play!)\"}" "$$DISCORD_WEBHOOK"'
+      PRE_SERVER_SHUTDOWN_HOOK: 'curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"$$(eval echo Stopping Valheim server $$SERVER_NAME)\"}" "$$DISCORD_WEBHOOK"'
+      PRE_RESTART_HOOK: 'curl -sfSL -X POST -H "Content-Type: application/json" -d "{\"username\":\"Valheim\",\"content\":\"$$(eval echo Automatically restarting Valheim server $$SERVER_NAME, most likely due to a detected update)\"}" "$$DISCORD_WEBHOOK"'
+    restart: unless-stopped
+    stop_grace_period: 2m
+
+networks:
+  valheim:
+    enable_ipv6: false
