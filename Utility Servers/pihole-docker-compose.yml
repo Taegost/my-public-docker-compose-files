@@ -1,0 +1,46 @@
+version: "3"
+name: pihole
+
+# https://github.com/pi-hole/docker-pi-hole/blob/master/README.md
+volumes:
+  etc:
+  dnsmasq:
+
+services:
+  pihole:
+    container_name: pihole
+    image: pihole/pihole:latest
+    # For DHCP it is recommended to remove these ports and instead add: network_mode: "host"
+    network_mode: bridge
+    networks:
+      pihole:
+        ipv4_address: 192.168.5.5
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "67:67/udp"
+      - "80:80/tcp"
+    environment:
+      FTLCONF_LOCAL_IPV4: 192.168.5.5
+      TEMPERATUREUNIT: f
+      WEBTHEME: "default-dark"
+      TZ: 'America/New_York'
+      WEBPASSWORD: 'SECRET'
+    # Volumes store your data between container upgrades
+    volumes:
+      - 'etc:/etc/pihole'
+      - 'dnsmasq:/etc/dnsmasq.d'
+    #   https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped # Recommended but not required (DHCP needs NET_ADMIN) 
+
+networks:
+  pihole:
+    driver: macvlan
+    driver_opts:
+      parent: ens18 
+    ipam:
+      config:
+        - subnet: "192.168.5.0/24"
+          gateway: 192.168.5.1

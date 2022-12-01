@@ -1,0 +1,12 @@
+version: "3"
+name: rancher
+
+services:
+  rancher:
+    container_name: rancher
+    image: rancher/rancher:latest
+    privileged: true
+
+    ports:
+      - "80:80/tcp"
+      - "443:443/udp"
